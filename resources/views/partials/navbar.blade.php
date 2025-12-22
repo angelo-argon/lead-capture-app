@@ -1,3 +1,3 @@
-<nav class="w-full font-mono font-bold text-[1.5em] flex flex-row items-center">
-    <h1 class="text-[#E5E7EB]">Lead-Capture App</h1>
+<nav class="w-full font-mono font-bold text-[2em] flex flex-row items-center z-10">
+    <h1 class="text-[#cfd3da]">A/S</h1>
 </nav>

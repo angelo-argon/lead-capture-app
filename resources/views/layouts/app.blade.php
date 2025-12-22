@@ -19,13 +19,13 @@
             </style>
         @endif
     </head>
-    <body class="w-screen h-screen bg-[#FDFDFC] bg-gradient-to-br from-[#05070F] via-[#0B0F1A] via-[#111827] to-[#0B1220] text-[#1b1b18] flex items-center lg:justify-start min-h-screen flex-col">
+    <body class="w-screen h-screen bg-gradient-to-br from-[#05070F] via-[#0B0F1A] via-[#111827] to-[#0B1220] text-[#1b1b18] flex items-center lg:justify-start min-h-screen flex-col overflow-hidden">
 
-        <header class="w-screen h-[7%] px-6 flex items-center">
+        <header class="w-screen h-[15%] px-15 flex items-center">
             @include('partials.navbar')
         </header>
 
-        <main class="w-full h-[86%]">
+        <main class="w-full h-[81%]">
             @yield('content')
         </main>
 
