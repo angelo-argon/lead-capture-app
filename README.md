@@ -1,3 +1,9 @@
+
+## [ Screenshot ]
+Page view of the website showing the main layout and UI design.
+<img width="1393" height="749" alt="Screenshot 2025-12-24 at 9 19 12 AM" src="https://github.com/user-attachments/assets/5f348e27-f918-4b49-b071-ba7ebc01a982" />
+
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
