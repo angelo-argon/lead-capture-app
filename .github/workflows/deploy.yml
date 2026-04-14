@@ -12,20 +12,6 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: laravel_test
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-        ports:
-          - 3306:3306
 
     steps:
       - uses: actions/checkout@v4
@@ -58,18 +44,17 @@ jobs:
       - name: Build Assets with Vite
         run: npm run build
 
+      - name: Run Database Migrations
+        run: php artisan migrate
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+
       - name: Run Tests
         run: php artisan test
         env:
-          DB_HOST: 127.0.0.1
-          DB_DATABASE: laravel_test
-          DB_USERNAME: root
-          DB_PASSWORD: 
-
-      - name: Cleanup
-        run: |
-          rm -rf node_modules
-          composer install --no-dev --no-interaction --prefer-dist --no-progress
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
 
   deploy-staging:
     needs: build-and-test
