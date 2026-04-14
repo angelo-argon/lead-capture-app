@@ -1,0 +1,158 @@
+name: CI/CD - Laravel Deploy to Cloudways
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+env:
+  COMPOSER_MEMORY_LIMIT: -1
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: laravel_test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, fileinfo, curl, mysql, sqlite
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate App Key
+        run: php artisan key:generate
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Build Assets with Vite
+        run: npm run build
+
+      - name: Run Tests
+        run: php artisan test
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: laravel_test
+          DB_USERNAME: root
+          DB_PASSWORD: 
+
+      - name: Cleanup
+        run: |
+          rm -rf node_modules
+          composer install --no-dev --no-interaction --prefer-dist --no-progress
+
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudways Staging
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT }}
+          script: |
+            cd ${{ secrets.STAGING_APP_PATH }}
+            git fetch origin
+            git checkout staging
+            git pull origin staging
+            
+            # Install dependencies
+            composer install --no-dev --no-interaction --prefer-dist
+            npm install
+            
+            # Build assets
+            npm run build
+            
+            # Run migrations
+            php artisan migrate --force
+            
+            # Clear caches
+            php artisan cache:clear
+            php artisan view:clear
+            php artisan config:clear
+            
+            # Set permissions
+            chmod -R 775 storage bootstrap/cache
+
+  deploy-production:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudways Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT }}
+          script: |
+            cd ${{ secrets.PROD_APP_PATH }}
+            git fetch origin
+            git checkout main
+            git pull origin main
+            
+            # Install dependencies
+            composer install --no-dev --no-interaction --prefer-dist
+            npm install
+            
+            # Build assets
+            npm run build
+            
+            # Run migrations (if needed)
+            php artisan migrate --force
+            
+            # Clear caches
+            php artisan cache:clear
+            php artisan view:clear
+            php artisan config:clear
+            
+            # Set permissions
+            chmod -R 775 storage bootstrap/cache
+
+      - name: Notify Deployment Success
+        if: success()
+        run: echo "✅ Production deployment completed successfully"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: echo "❌ Production deployment failed - check logs"
