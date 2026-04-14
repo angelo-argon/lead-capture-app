@@ -117,11 +117,10 @@ jobs:
       - name: Deploy to Cloudways Production
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
+          host: 152.42.202.111
+          username: master_abndwqdbfq
           key: ${{ secrets.PROD_SSH_KEY }}
-          port: ${{ secrets.PROD_SSH_PORT }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: 22
           script: |
             cd ${{ secrets.PROD_APP_PATH }}
             git fetch origin
